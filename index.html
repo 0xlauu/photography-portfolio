@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MagicSea</title>
+  <meta name="description" content="MagicSea 摄影作品集">
+  
+  <!-- 压缩版本的CSS，减少加载时间 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #faf9f7; /* 米白色背景 */
+      color: #2d3748;
+    }
+    
+    .modern-font {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    
+    .title-font {
+      font-family: 'Playfair Display', serif;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+    
+    .photo-item {
+      transition: transform 0.3s ease;
+      break-inside: avoid;
+    }
+    
+    .photo-item:hover {
+      transform: scale(1.02);
+    }
+    
+    .photo-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    
+    /* 瀑布流布局 - 缩小间距 */
+    .masonry {
+      column-count: 2;
+      column-gap: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+      .masonry {
+        column-count: 3;
+        column-gap: 1rem;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .masonry {
+        column-count: 4;
+        column-gap: 1rem;
+      }
+    }
+    
+    /* 左侧边栏 */
+    .sidebar {
+      width: 280px;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      background-color: #f7f6f4;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 3rem 2rem;
+      z-index: 10;
+    }
+    
+    /* 主内容区域 */
+    .main-content {
+      margin-left: 280px;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    
+    /* 响应式：移动设备隐藏侧边栏，改为顶部 */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        padding: 2rem 1rem;
+      }
+      
+      .main-content {
+        margin-left: 0;
+        padding: 1rem;
+      }
+      
+      .masonry {
+        column-count: 2;
+        column-gap: 0.5rem;
+      }
+    }
+    
+    /* 简单的loading效果 */
+    .fade-in {
+      opacity: 0;
+      animation: fadeIn 0.8s ease-in forwards;
+    }
+    
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    /* 灯箱样式 */
+    .lightbox-content {
+      width: 90vw;
+      height: 80vh;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      justify-content: center;
+      position: relative;
+      gap: 0.5rem;
+    }
+    
+    .lightbox-image-container {
+      flex: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .lightbox-image {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+    
+    .lightbox-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+      text-align: right;
+      padding: 3rem 1rem 2rem 3rem;
+      min-width: 280px;
+      max-width: 420px;
+    }
+
+    .lightbox-info h2 {
+      line-height: 1.4;
+      margin-bottom: 0.5rem;
+      font-weight: 300;
+      letter-spacing: 0.02em;
+      word-spacing: 0.1em;
+    }
+
+    .lightbox-info p {
+      line-height: 1.6;
+      letter-spacing: 0.15em;
+      opacity: 0.8;
+    }
+
+    .lightbox-description {
+      color: #6b7280;
+      font-style: italic;
+      line-height: 1.7;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+      max-width: 300px;
+      font-weight: 300;
+      letter-spacing: 0.01em;
+      opacity: 0.9;
+      text-align: right;
+    }
+    
+    .lightbox-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      cursor: pointer;
+      font-size: 1.5rem;
+      color: #6b7280;
+      transition: all 0.2s;
+      z-index: 10;
+      padding: 0.5rem;
+      border-radius: 50%;
+      backdrop-filter: blur(2px);
+    }
+    
+    .lightbox-close:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #374151;
+      transform: scale(1.1);
+    }
+    
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 1.5rem;
+      color: #6b7280;
+      transition: all 0.2s;
+    }
+    
+    .lightbox-nav:hover {
+      color: #374151;
+    }
+
+    /* 桌面端导航按钮的特殊样式 */
+    .lightbox-prev .lightbox-arrow,
+    .lightbox-next .lightbox-arrow {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      padding: 0.5rem;
+      backdrop-filter: blur(2px);
+      transition: all 0.2s;
+    }
+
+    .lightbox-prev:hover .lightbox-arrow,
+    .lightbox-next:hover .lightbox-arrow {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.2);
+    }
+    
+    .lightbox-prev {
+      left: 0;
+      width: 50%;
+      height: 100%;
+      top: 0;
+      transform: none;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding-left: 3rem;
+      background: transparent;
+      border-radius: 0;
+      backdrop-filter: none;
+    }
+    
+    .lightbox-next {
+      right: 0;
+      width: 50%;
+      height: 100%;
+      top: 0;
+      transform: none;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 3rem;
+      background: transparent;
+      border-radius: 0;
+      backdrop-filter: none;
+    }
+    
+    @media (max-width: 768px) {
+      .lightbox-content {
+        width: 95vw;
+        height: 90vh;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .lightbox-info {
+        flex: none;
+        min-width: auto;
+        max-width: none;
+        padding: 1rem;
+        order: 2;
+        justify-content: flex-start;
+      }
+
+      .lightbox-info h2 {
+        font-size: 1.125rem;
+        margin-bottom: 0.5rem;
+        font-weight: 300;
+      }
+
+      .lightbox-info p {
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+      }
+
+      .lightbox-description {
+        font-size: 0.8rem;
+        margin-top: 1rem;
+        max-width: none;
+      }
+
+      .lightbox-image-container {
+        flex: 1;
+        order: 1;
+      }
+      
+      .lightbox-close {
+        top: 1rem;
+        right: 1rem;
+        font-size: 1.25rem;
+        padding: 0.4rem;
+      }
+      
+      .lightbox-prev {
+        left: 1rem;
+        top: 45%;
+        font-size: 1.25rem;
+        width: auto;
+        height: auto;
+        transform: translateY(-50%);
+        padding: 0;
+        justify-content: center;
+        background: transparent;
+        border-radius: 0;
+        backdrop-filter: none;
+      }
+      
+      .lightbox-next {
+        right: 1rem;
+        top: 45%;
+        font-size: 1.25rem;
+        width: auto;
+        height: auto;
+        transform: translateY(-50%);
+        padding: 0;
+        justify-content: center;
+        background: transparent;
+        border-radius: 0;
+        backdrop-filter: none;
+      }
+
+      .lightbox-prev .lightbox-arrow,
+      .lightbox-next .lightbox-arrow {
+        padding: 0.4rem;
+      }
+    }
+
+    /* 拖拽上传样式 */
+    .drag-over {
+      border-color: #4f46e5 !important;
+      background-color: #f3f4f6;
+    }
+
+    .upload-area {
+      transition: all 0.3s ease;
+    }
+
+    /* 灯箱动画 */
+    #gallery {
+      transition: all 0.3s ease;
+    }
+
+    #gallery.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #gallery:not(.hidden) {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lightbox-content {
+      transition: transform 0.3s ease;
+    }
+
+    #gallery.hidden .lightbox-content {
+      transform: scale(0.9);
+    }
+
+    #gallery:not(.hidden) .lightbox-content {
+      transform: scale(1);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen" style="background-color: #faf9f7;">
+  <!-- 左侧边栏 -->
+  <aside class="sidebar">
+    <div>
+      <h1 class="text-xl md:text-2xl text-gray-800 title-font">
+        MagicSea
+      </h1>
+      <!-- 添加上传按钮 -->
+      <button onclick="openUploadModal()" 
+              class="mt-4 px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors w-full">
+        + 上传照片
+      </button>
+      
+      <!-- 管理按钮 -->
+      <button onclick="toggleManageMode()" id="manageBtn"
+              class="mt-2 px-4 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-500 transition-colors w-full">
+        管理照片
+      </button>
+      
+      <!-- 清理存储按钮 -->
+      <button onclick="clearStorage()" 
+              class="mt-2 px-4 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-500 transition-colors w-full">
+        清理存储
+      </button>
+    </div>
+    
+    <div>
+      <div id="photoStats" class="mb-2 text-xs text-gray-600">
+        <p>总照片: <span id="totalPhotos">0</span></p>
+        <p>我的照片: <span id="userPhotos">0</span></p>
+        <p>存储使用: <span id="storageUsage">0%</span></p>
+      </div>
+      <p class="text-xs font-thin text-gray-600 title-font">
+        0xlau.com
+      </p>
+    </div>
+  </aside>
+
+  <!-- 主内容区域 -->
+  <main class="main-content">
+    <div class="masonry">
+      <!-- 照片将通过JavaScript动态加载 -->
+    </div>
+  </main>
+
+  <!-- 灯箱 -->
+  <div id="gallery" class="fixed inset-0 z-50 hidden" style="background-color: rgba(250, 249, 247, 0.95); backdrop-filter: blur(8px);">
+    <div class="w-full h-full flex items-center justify-center p-8 relative">
+      <!-- 关闭按钮 -->
+      <button class="lightbox-close" onclick="closeGallery()">×</button>
+      
+      <!-- 左箭头 -->
+      <button class="lightbox-nav lightbox-prev" onclick="previousImage()">
+        <span class="lightbox-arrow">‹</span>
+      </button>
+      
+      <!-- 右箭头 -->
+      <button class="lightbox-nav lightbox-next" onclick="nextImage()">
+        <span class="lightbox-arrow">›</span>
+      </button>
+      
+      <!-- 照片展示区 -->
+      <div class="lightbox-content">
+        <!-- 左侧文字信息 -->
+        <div class="lightbox-info">
+          <div>
+            <h2 id="gallery-title" class="text-lg font-light text-gray-900 mb-2 title-font tracking-wide">Photography Collection</h2>
+            <p id="gallery-location" class="text-xs text-gray-500 mb-4 font-light tracking-wider uppercase">Location, Country</p>
+          </div>
+        </div>
+        
+        <!-- 右侧图片 -->
+        <div class="lightbox-image-container">
+          <img id="gallery-img" src="" alt="" class="lightbox-image">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 上传照片模态框 -->
+  <div id="uploadModal" class="fixed inset-0 z-50 hidden" style="background-color: rgba(250, 249, 247, 0.95);">
+    <div class="w-full h-full flex items-center justify-center p-8">
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">上传新照片</h3>
+          <button onclick="closeUploadModal()" class="text-gray-500 hover:text-gray-700 text-xl">×</button>
+        </div>
+        
+        <form id="uploadForm" onsubmit="handleUpload(event)">
+          <!-- 文件选择 -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">选择照片</label>
+            <div id="uploadArea" class="upload-area w-full p-6 border-2 border-dashed border-gray-300 rounded-md text-center cursor-pointer hover:border-gray-400">
+              <input type="file" id="photoFile" accept="image/*" required class="hidden">
+              <div id="uploadText">
+                <svg class="mx-auto h-12 w-12 text-gray-400 mb-2" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <p class="text-sm text-gray-600">点击选择照片或拖拽文件到此处</p>
+                <p class="text-xs text-gray-500 mt-1">支持 JPG, PNG, GIF 格式</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 预览区域 -->
+          <div id="previewContainer" class="mb-4 hidden">
+            <img id="previewImage" src="" alt="预览" class="w-full h-48 object-cover rounded-md">
+            <p id="fileInfo" class="text-xs text-gray-500 mt-1"></p>
+          </div>
+          
+          <!-- 标题 -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">照片标题</label>
+            <input type="text" id="photoTitle" required 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                   placeholder="请输入照片标题">
+          </div>
+          
+          <!-- 拍摄地点 -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">拍摄地点</label>
+            <input type="text" id="photoLocation" required 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                   placeholder="例如：北京，中国">
+          </div>
+          
+          <!-- 描述 -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">照片描述（可选）</label>
+            <textarea id="photoDescription" rows="3" 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                      placeholder="描述这张照片的故事..."></textarea>
+          </div>
+          
+          <!-- 按钮 -->
+          <div class="flex justify-end space-x-3">
+            <button type="button" onclick="closeUploadModal()" 
+                    class="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
+              取消
+            </button>
+            <button type="submit" 
+                    class="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700">
+              上传照片
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 默认示例照片数据 (已清空，仅显示用户上传的照片)
+    const defaultPhotos = [];
+
+    // 用户照片数据管理
+    let photos = [];
+    let currentImageIndex = 0;
+
+    // 初始化照片数据
+    function initPhotos() {
+      const savedPhotos = localStorage.getItem('userPhotos');
+      const userPhotos = savedPhotos ? JSON.parse(savedPhotos) : [];
+      photos = [...userPhotos, ...defaultPhotos];
+      renderPhotos();
+    }
+
+    // 保存用户照片到localStorage
+    function saveUserPhotos() {
+      try {
+        const userPhotos = photos.filter(photo => photo.isUserPhoto);
+        localStorage.setItem('userPhotos', JSON.stringify(userPhotos));
+      } catch (error) {
+        if (error.name === 'QuotaExceededError') {
+          alert('存储空间不足！照片太大或数量太多。建议压缩照片后再上传。');
+          console.error('localStorage quota exceeded:', error);
+        } else {
+          console.error('Error saving photos:', error);
+        }
+      }
+    }
+
+    // 灯箱功能
+    function openGallery(index) {
+      currentImageIndex = index;
+      showImage(index);
+      const gallery = document.getElementById('gallery');
+      gallery.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      
+      // 触发重排以确保动画效果
+      gallery.offsetHeight;
+    }
+
+    function showImage(index) {
+      const photo = photos[index];
+      const img = document.getElementById('gallery-img');
+      const title = document.getElementById('gallery-title');
+      const locationEl = document.getElementById('gallery-location');
+      
+      img.src = photo.src;
+      title.textContent = photo.alt;
+      
+      // 如果有描述信息，显示在位置下方
+      if (photo.description && photo.description.trim()) {
+        locationEl.innerHTML = `${photo.location}<div class="lightbox-description">${photo.description}</div>`;
+      } else {
+        locationEl.textContent = photo.location;
+      }
+    }
+
+    function closeGallery() {
+      const gallery = document.getElementById('gallery');
+      gallery.classList.add('hidden');
+      
+      // 延迟恢复滚动，等待动画完成
+      setTimeout(() => {
+        document.body.style.overflow = '';
+      }, 300);
+    }
+
+    function nextImage() {
+      currentImageIndex = (currentImageIndex + 1) % photos.length;
+      showImage(currentImageIndex);
+    }
+
+    function previousImage() {
+      currentImageIndex = (currentImageIndex - 1 + photos.length) % photos.length;
+      showImage(currentImageIndex);
+    }
+
+    // 键盘事件
+    document.addEventListener('keydown', function(e) {
+      if (document.getElementById('gallery').classList.contains('hidden')) return;
+      
+      switch(e.key) {
+        case 'Escape':
+          closeGallery();
+          break;
+        case 'ArrowLeft':
+          previousImage();
+          break;
+        case 'ArrowRight':
+          nextImage();
+          break;
+      }
+    });
+
+    // 点击背景关闭画廊
+    document.getElementById('gallery').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeGallery();
+      }
+    });
+
+    // 性能优化：图片懒加载
+    const images = document.querySelectorAll('img');
+    const imageObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          img.style.opacity = '1';
+          imageObserver.unobserve(img);
+        }
+      });
+    });
+
+    images.forEach(img => {
+      img.style.opacity = '0';
+      img.addEventListener('load', () => {
+        img.style.transition = 'opacity 0.5s';
+        img.style.opacity = '1';
+      });
+      imageObserver.observe(img);
+    });
+
+    // 上传模态框控制
+    function openUploadModal() {
+      const modal = document.getElementById('uploadModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    // 清理存储功能
+    function clearStorage() {
+      if (confirm('确定要清理所有用户照片吗？此操作不可撤销！')) {
+        localStorage.removeItem('userPhotos');
+        // 重新初始化，只显示默认照片
+        photos = [...defaultPhotos];
+        renderPhotos();
+        showMessage('存储已清理', 'info');
+      }
+    }
+
+    // 获取存储使用情况
+    function getStorageInfo() {
+      try {
+        const used = JSON.stringify(localStorage).length;
+        const quota = 5 * 1024 * 1024; // 假设5MB限制
+        return {
+          used: used,
+          quota: quota,
+          percentage: Math.round((used / quota) * 100)
+        };
+      } catch (e) {
+        return { used: 0, quota: 0, percentage: 0 };
+      }
+    }
+
+    // 确保函数全局可访问
+    window.openUploadModal = openUploadModal;
+    window.closeUploadModal = closeUploadModal;
+    window.handleUpload = handleUpload;
+    window.openGallery = openGallery;
+    window.closeGallery = closeGallery;
+    window.nextImage = nextImage;
+    window.previousImage = previousImage;
+    window.deletePhoto = deletePhoto;
+    window.toggleManageMode = toggleManageMode;
+    window.clearStorage = clearStorage;
+
+    function closeUploadModal() {
+      document.getElementById('uploadModal').classList.add('hidden');
+      document.body.style.overflow = '';
+      // 重置表单
+      const form = document.getElementById('uploadForm');
+      if (form) form.reset();
+      const previewContainer = document.getElementById('previewContainer');
+      if (previewContainer) previewContainer.classList.add('hidden');
+    }
+
+    // 图片压缩函数
+    function compressImage(file, maxWidth = 1200, quality = 0.8) {
+      return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        img.onload = function() {
+          // 计算新的尺寸
+          let { width, height } = img;
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          // 设置canvas尺寸
+          canvas.width = width;
+          canvas.height = height;
+          
+          // 绘制压缩后的图片
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // 转换为base64
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedDataUrl);
+        };
+        
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    // 文件预览功能
+    function handleFileSelect(file) {
+      if (file) {
+        // 检查文件大小（10MB限制）
+        if (file.size > 10 * 1024 * 1024) {
+          alert('文件太大！请选择小于10MB的图片。');
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('previewImage').src = e.target.result;
+          document.getElementById('previewContainer').classList.remove('hidden');
+          
+          // 显示文件信息
+          const fileInfo = document.getElementById('fileInfo');
+          if (fileInfo) {
+            const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+            fileInfo.textContent = `文件大小: ${sizeInMB} MB | 压缩后约: ${(sizeInMB * 0.3).toFixed(2)} MB`;
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+
+
+    // 初始化拖拽上传功能
+    function initUploadArea() {
+      const uploadArea = document.getElementById('uploadArea');
+      const fileInput = document.getElementById('photoFile');
+
+      if (!uploadArea || !fileInput) return;
+
+      uploadArea.addEventListener('click', () => {
+        fileInput.click();
+      });
+
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+      });
+
+      uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+      });
+
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0 && files[0].type.startsWith('image/')) {
+          fileInput.files = files;
+          handleFileSelect(files[0]);
+        }
+      });
+
+      // 绑定文件输入变化事件
+      fileInput.addEventListener('change', function(e) {
+        handleFileSelect(e.target.files[0]);
+      });
+    }
+
+    // 处理照片上传
+    async function handleUpload(event) {
+      event.preventDefault();
+      
+      const fileInput = document.getElementById('photoFile');
+      const title = document.getElementById('photoTitle').value;
+      const location = document.getElementById('photoLocation').value;
+      const description = document.getElementById('photoDescription').value;
+      
+      if (!fileInput || !fileInput.files[0]) {
+        alert('请选择一张照片');
+        return;
+      }
+      
+      if (!title.trim()) {
+        alert('请输入照片标题');
+        return;
+      }
+      
+      if (!location.trim()) {
+        alert('请输入拍摄地点');
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      
+      try {
+        // 显示压缩进度
+        showMessage('正在压缩图片...', 'info');
+        
+        // 压缩图片
+        const compressedDataUrl = await compressImage(file);
+        
+        const newPhoto = {
+          src: compressedDataUrl,
+          alt: title.trim(),
+          location: location.trim(),
+          description: description.trim(),
+          isUserPhoto: true,
+          uploadDate: new Date().toISOString()
+        };
+        
+        // 添加到照片数组开头（最新的在前面）
+        photos.unshift(newPhoto);
+        
+        // 保存到localStorage
+        saveUserPhotos();
+        
+        // 重新渲染照片网格
+        renderPhotos();
+        
+        // 关闭模态框
+        closeUploadModal();
+        
+        // 显示成功消息
+        showMessage('照片上传成功！', 'success');
+        
+      } catch (error) {
+        console.error('Upload error:', error);
+        alert('上传失败，请重试');
+      }
+    }
+
+    // 渲染照片网格
+    function renderPhotos() {
+      const masonryContainer = document.querySelector('.masonry');
+      masonryContainer.innerHTML = '';
+      
+      if (photos.length === 0) {
+        // 显示空状态
+        masonryContainer.innerHTML = `
+          <div class="col-span-full w-full text-center py-20">
+            <div class="text-gray-400 mb-4">
+              <svg class="mx-auto h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-light text-gray-600 mb-2 title-font">暂无照片作品</h3>
+            <p class="text-sm text-gray-500 mb-6">点击左侧"上传照片"按钮开始创建您的摄影作品集</p>
+            <button onclick="openUploadModal()" 
+                    class="px-6 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors">
+              上传第一张照片
+            </button>
+          </div>
+        `;
+        updatePhotoStats();
+        return;
+      }
+      
+      photos.forEach((photo, index) => {
+        const photoDiv = document.createElement('div');
+        photoDiv.className = 'photo-item fade-in mb-4 relative group';
+        photoDiv.style.animationDelay = `${index * 0.1}s`;
+        
+        photoDiv.innerHTML = `
+          <img src="${photo.src}" 
+               alt="${photo.alt}" 
+               data-location="${photo.location}"
+               data-description="${photo.description || ''}"
+               data-full-src="${photo.src}"
+               class="cursor-pointer w-full h-auto block"
+               onclick="openGallery(${index})" />
+                     ${photo.isUserPhoto ? `
+             <button onclick="deletePhoto(${index})" 
+                     class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center ${isManageMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity text-xs hover:bg-red-600">
+               ×
+             </button>
+           ` : ''}
+        `;
+        
+        masonryContainer.appendChild(photoDiv);
+      });
+      
+      // 重新应用懒加载
+      applyLazyLoading();
+      
+      // 更新统计信息
+      updatePhotoStats();
+    }
+
+    // 更新照片统计信息
+    function updatePhotoStats() {
+      const userPhotoCount = photos.filter(photo => photo.isUserPhoto).length;
+      const storageInfo = getStorageInfo();
+      
+      document.getElementById('totalPhotos').textContent = photos.length;
+      document.getElementById('userPhotos').textContent = userPhotoCount;
+      
+      const storageElement = document.getElementById('storageUsage');
+      if (storageElement) {
+        storageElement.textContent = `${storageInfo.percentage}%`;
+        // 根据使用率改变颜色
+        if (storageInfo.percentage > 80) {
+          storageElement.className = 'text-red-600 font-medium';
+        } else if (storageInfo.percentage > 60) {
+          storageElement.className = 'text-orange-600';
+        } else {
+          storageElement.className = '';
+        }
+      }
+    }
+
+    // 删除照片
+    function deletePhoto(index) {
+      if (confirm('确定要删除这张照片吗？')) {
+        photos.splice(index, 1);
+        saveUserPhotos();
+        renderPhotos();
+        showMessage('照片已删除', 'info');
+      }
+    }
+
+    // 重新应用懒加载
+    function applyLazyLoading() {
+      const images = document.querySelectorAll('.photo-item img');
+      images.forEach(img => {
+        img.style.opacity = '0';
+        img.addEventListener('load', () => {
+          img.style.transition = 'opacity 0.5s';
+          img.style.opacity = '1';
+        });
+      });
+    }
+
+    // 显示消息提示
+    function showMessage(message, type = 'info') {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `fixed top-4 right-4 px-4 py-2 rounded-md text-white z-50 ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+      }`;
+      messageDiv.textContent = message;
+      
+      document.body.appendChild(messageDiv);
+      
+      setTimeout(() => {
+        messageDiv.remove();
+      }, 3000);
+    }
+
+    // 管理模式
+    let isManageMode = false;
+
+    function toggleManageMode() {
+      isManageMode = !isManageMode;
+      const manageBtn = document.getElementById('manageBtn');
+      
+      if (isManageMode) {
+        manageBtn.textContent = '退出管理';
+        manageBtn.className = 'mt-2 px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-500 transition-colors w-full';
+        showMessage('现在可以删除用户上传的照片', 'info');
+      } else {
+        manageBtn.textContent = '管理照片';
+        manageBtn.className = 'mt-2 px-4 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-500 transition-colors w-full';
+      }
+      
+      // 更新照片显示
+      updatePhotoManageDisplay();
+    }
+
+    function updatePhotoManageDisplay() {
+      const deleteButtons = document.querySelectorAll('.photo-item button');
+      deleteButtons.forEach(btn => {
+        if (isManageMode) {
+          btn.classList.remove('opacity-0');
+          btn.classList.add('opacity-100');
+        } else {
+          btn.classList.remove('opacity-100');
+          btn.classList.add('opacity-0');
+        }
+      });
+    }
+
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      initPhotos();
+      initUploadArea();
+    });
+  </script>
+</body>
+</html>
