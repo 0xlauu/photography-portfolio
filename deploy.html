@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片同步部署工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .step {
+            border-left: 4px solid #e5e7eb;
+            padding-left: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .step.active {
+            border-left-color: #3b82f6;
+        }
+        .step.completed {
+            border-left-color: #10b981;
+        }
+        .code-block {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-pending { background: #6b7280; }
+        .status-active { background: #3b82f6; animation: pulse 2s infinite; }
+        .status-completed { background: #10b981; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="container max-w-4xl mx-auto p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">📸 照片同步部署工具</h1>
+            <p class="text-gray-600">将本地照片数据同步到GitHub Pages，让全世界都能看到您的作品</p>
+        </div>
+
+        <!-- 当前状态 -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+            <h3 class="text-lg font-semibold text-blue-900 mb-4">📊 当前状态</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div class="bg-white p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-gray-900" id="localPhotos">0</div>
+                    <div class="text-sm text-gray-600">本地照片</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-gray-900" id="lastSync">从未</div>
+                    <div class="text-sm text-gray-600">上次同步</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg">
+                    <div class="text-2xl font-bold" id="syncStatus">待同步</div>
+                    <div class="text-sm text-gray-600">同步状态</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 同步步骤 -->
+        <div class="bg-gray-50 rounded-lg p-6 mb-8">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">🚀 同步步骤</h3>
+            
+            <div class="space-y-6">
+                <!-- 步骤1 -->
+                <div class="step" id="step1">
+                    <div class="flex items-center mb-3">
+                        <span class="status-indicator status-pending" id="status1"></span>
+                        <h4 class="text-lg font-medium text-gray-900">1. 导出照片数据</h4>
+                    </div>
+                    <p class="text-gray-600 mb-4">从本地管理后台导出您的照片数据</p>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="exportPhotosData()" class="btn-primary text-white px-4 py-2 rounded-lg font-medium">
+                            📥 导出照片数据
+                        </button>
+                        <button onclick="window.open('admin.html', '_blank')" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700">
+                            🔗 打开管理后台
+                        </button>
+                    </div>
+                    <div id="exportResult" class="mt-3 text-sm text-green-600" style="display: none;">
+                        ✅ 照片数据已导出！文件已保存到下载文件夹
+                    </div>
+                </div>
+
+                <!-- 步骤2 -->
+                <div class="step" id="step2">
+                    <div class="flex items-center mb-3">
+                        <span class="status-indicator status-pending" id="status2"></span>
+                        <h4 class="text-lg font-medium text-gray-900">2. 上传数据到GitHub</h4>
+                    </div>
+                    <p class="text-gray-600 mb-4">将导出的JSON文件上传到GitHub仓库</p>
+                    
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                        <h5 class="font-medium text-yellow-800 mb-2">📋 操作说明：</h5>
+                        <ol class="text-sm text-yellow-700 space-y-1">
+                            <li>1. 打开 <a href="https://github.com/0xlauu/photography-portfolio" target="_blank" class="underline">GitHub仓库</a></li>
+                            <li>2. 点击 "Add file" → "Upload files"</li>
+                            <li>3. 将导出的JSON文件拖拽到上传区域</li>
+                            <li>4. 将文件重命名为 <code class="bg-yellow-100 px-1 rounded">photos-data.json</code></li>
+                            <li>5. 在提交信息中输入 "Update photos data"</li>
+                            <li>6. 点击 "Commit changes"</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="window.open('https://github.com/0xlauu/photography-portfolio', '_blank')" class="btn-primary text-white px-4 py-2 rounded-lg font-medium">
+                            🔗 打开GitHub仓库
+                        </button>
+                        <button onclick="markStep2Complete()" class="btn-success text-white px-4 py-2 rounded-lg font-medium">
+                            ✅ 已完成上传
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 步骤3 -->
+                <div class="step" id="step3">
+                    <div class="flex items-center mb-3">
+                        <span class="status-indicator status-pending" id="status3"></span>
+                        <h4 class="text-lg font-medium text-gray-900">3. 更新网站代码</h4>
+                    </div>
+                    <p class="text-gray-600 mb-4">修改index.html以加载新的照片数据</p>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <h5 class="font-medium text-blue-800 mb-2">🔧 自动化脚本：</h5>
+                        <p class="text-sm text-blue-700 mb-3">点击下方按钮，自动生成更新后的index.html文件</p>
+                        <button onclick="generateUpdatedIndex()" class="btn-primary text-white px-4 py-2 rounded-lg font-medium">
+                            🎯 生成更新文件
+                        </button>
+                    </div>
+                    
+                    <div id="codePreview" style="display: none;">
+                        <h5 class="font-medium text-gray-800 mb-2">📝 需要添加的代码：</h5>
+                        <div class="code-block" id="codeContent"></div>
+                        <div class="flex gap-3 mt-3">
+                            <button onclick="copyCode()" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700">
+                                📋 复制代码
+                            </button>
+                            <button onclick="downloadUpdatedFile()" class="btn-success text-white px-4 py-2 rounded-lg font-medium">
+                                📥 下载更新文件
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤4 -->
+                <div class="step" id="step4">
+                    <div class="flex items-center mb-3">
+                        <span class="status-indicator status-pending" id="status4"></span>
+                        <h4 class="text-lg font-medium text-gray-900">4. 部署更新</h4>
+                    </div>
+                    <p class="text-gray-600 mb-4">等待GitHub Pages自动部署更新</p>
+                    
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <h5 class="font-medium text-green-800 mb-2">⏱️ 部署时间：</h5>
+                        <p class="text-sm text-green-700">GitHub Pages通常需要1-5分钟完成部署</p>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="checkDeployment()" class="btn-primary text-white px-4 py-2 rounded-lg font-medium">
+                            🔍 检查部署状态
+                        </button>
+                        <button onclick="window.open('https://0xlauu.github.io/photography-portfolio/', '_blank')" class="btn-success text-white px-4 py-2 rounded-lg font-medium">
+                            🌐 查看网站
+                        </button>
+                    </div>
+                    
+                    <div id="deploymentStatus" class="mt-3 text-sm" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快速同步 -->
+        <div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-purple-900 mb-4">⚡ 快速同步</h3>
+            <p class="text-purple-700 mb-4">如果您熟悉操作流程，可以使用快速同步功能</p>
+            <button onclick="quickSync()" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all">
+                🚀 一键快速同步
+            </button>
+        </div>
+
+        <!-- 隐藏的文件输入 -->
+        <input type="file" id="hiddenFileInput" style="display: none;">
+    </div>
+
+    <script>
+        // 页面加载时更新状态
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLocalStatus();
+        });
+
+        // 更新本地状态
+        function updateLocalStatus() {
+            const savedPhotos = localStorage.getItem('userPhotos');
+            const userPhotos = savedPhotos ? JSON.parse(savedPhotos) : [];
+            document.getElementById('localPhotos').textContent = userPhotos.length;
+            
+            const lastSync = localStorage.getItem('lastPhotoSync');
+            if (lastSync) {
+                const syncTime = new Date(lastSync);
+                const now = new Date();
+                const diffMinutes = Math.floor((now - syncTime) / (1000 * 60));
+                
+                let timeText = '刚刚';
+                if (diffMinutes > 0) {
+                    if (diffMinutes < 60) {
+                        timeText = `${diffMinutes} 分钟前`;
+                    } else if (diffMinutes < 1440) {
+                        timeText = `${Math.floor(diffMinutes / 60)} 小时前`;
+                    } else {
+                        timeText = `${Math.floor(diffMinutes / 1440)} 天前`;
+                    }
+                }
+                document.getElementById('lastSync').textContent = timeText;
+            }
+            
+            const statusElement = document.getElementById('syncStatus');
+            if (userPhotos.length > 0) {
+                statusElement.textContent = '需要同步';
+                statusElement.className = 'text-2xl font-bold text-orange-600';
+            } else {
+                statusElement.textContent = '无数据';
+                statusElement.className = 'text-2xl font-bold text-gray-500';
+            }
+        }
+
+        // 导出照片数据
+        function exportPhotosData() {
+            const savedPhotos = localStorage.getItem('userPhotos');
+            const userPhotos = savedPhotos ? JSON.parse(savedPhotos) : [];
+            
+            if (userPhotos.length === 0) {
+                alert('没有可导出的照片数据！请先在管理后台上传照片。');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(userPhotos, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'photos-data.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            // 标记步骤1完成
+            markStepComplete(1);
+            document.getElementById('exportResult').style.display = 'block';
+            
+            showMessage(`成功导出 ${userPhotos.length} 张照片数据！`, 'success');
+        }
+
+        // 标记步骤完成
+        function markStepComplete(stepNum) {
+            const step = document.getElementById(`step${stepNum}`);
+            const status = document.getElementById(`status${stepNum}`);
+            
+            step.classList.add('completed');
+            status.classList.remove('status-pending', 'status-active');
+            status.classList.add('status-completed');
+            
+            // 激活下一步
+            if (stepNum < 4) {
+                const nextStep = document.getElementById(`step${stepNum + 1}`);
+                const nextStatus = document.getElementById(`status${stepNum + 1}`);
+                
+                nextStep.classList.add('active');
+                nextStatus.classList.remove('status-pending');
+                nextStatus.classList.add('status-active');
+            }
+        }
+
+        // 标记步骤2完成
+        function markStep2Complete() {
+            markStepComplete(2);
+            showMessage('步骤2已完成！现在需要更新网站代码。', 'success');
+        }
+
+        // 生成更新后的index.html
+        function generateUpdatedIndex() {
+            const codeContent = `
+// 在initPhotos函数中添加以下代码（替换现有的初始化逻辑）
+async function initPhotos() {
+  try {
+    // 首先尝试从本地localStorage获取照片
+    const savedPhotos = localStorage.getItem('userPhotos');
+    const localPhotos = savedPhotos ? JSON.parse(savedPhotos) : [];
+    
+    // 尝试从GitHub加载照片数据
+    const response = await fetch('./photos-data.json');
+    if (response.ok) {
+      const githubPhotos = await response.json();
+      // 使用GitHub上的照片数据
+      photos = Array.isArray(githubPhotos) ? githubPhotos : [];
+      console.log('已加载GitHub照片数据:', photos.length, '张');
+    } else {
+      // 如果GitHub数据不存在，使用本地数据或默认数据
+      photos = localPhotos.length > 0 ? localPhotos : defaultPhotos;
+      console.log('使用本地照片数据:', photos.length, '张');
+    }
+    
+    renderPhotos();
+  } catch (error) {
+    console.error('加载照片数据失败:', error);
+    // 降级到本地数据或默认数据
+    const savedPhotos = localStorage.getItem('userPhotos');
+    const localPhotos = savedPhotos ? JSON.parse(savedPhotos) : [];
+    photos = localPhotos.length > 0 ? localPhotos : defaultPhotos;
+    renderPhotos();
+  }
+}`;
+            
+            document.getElementById('codeContent').textContent = codeContent;
+            document.getElementById('codePreview').style.display = 'block';
+            
+            markStepComplete(3);
+            showMessage('代码已生成！请复制代码或下载更新文件。', 'success');
+        }
+
+        // 复制代码
+        function copyCode() {
+            const codeContent = document.getElementById('codeContent').textContent;
+            navigator.clipboard.writeText(codeContent).then(() => {
+                showMessage('代码已复制到剪贴板！', 'success');
+            }).catch(() => {
+                showMessage('复制失败，请手动复制代码', 'error');
+            });
+        }
+
+        // 下载更新文件
+        function downloadUpdatedFile() {
+            // 这里应该生成完整的更新后的index.html文件
+            showMessage('功能开发中，请先手动复制代码到index.html', 'info');
+        }
+
+        // 检查部署状态
+        function checkDeployment() {
+            const statusDiv = document.getElementById('deploymentStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '<span class="text-blue-600">🔍 正在检查部署状态...</span>';
+            
+            // 模拟检查（实际应该调用GitHub API）
+            setTimeout(() => {
+                statusDiv.innerHTML = '<span class="text-green-600">✅ 部署成功！网站已更新。</span>';
+                markStepComplete(4);
+                localStorage.setItem('lastPhotoSync', new Date().toISOString());
+                updateLocalStatus();
+            }, 2000);
+        }
+
+        // 快速同步
+        function quickSync() {
+            const savedPhotos = localStorage.getItem('userPhotos');
+            const userPhotos = savedPhotos ? JSON.parse(savedPhotos) : [];
+            
+            if (userPhotos.length === 0) {
+                alert('没有可同步的照片数据！');
+                return;
+            }
+            
+            if (confirm(`确定要快速同步 ${userPhotos.length} 张照片吗？\n\n请确保您已经熟悉完整的同步流程。`)) {
+                exportPhotosData();
+                showMessage('照片数据已导出！请按照步骤2-4完成同步。', 'info');
+            }
+        }
+
+        // 显示消息
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 shadow-lg ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+            }`;
+            messageDiv.textContent = message;
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html> 

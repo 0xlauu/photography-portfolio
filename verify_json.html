@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON照片验证工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .file-input {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .file-input:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        .photo-preview {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .photo-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 5px;
+            margin: 10px;
+        }
+        .info-box {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .size-info {
+            background-color: #fff3cd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 JSON照片验证工具</h1>
+        <p>选择从管理后台导出的JSON文件，查看其中包含的照片内容和大小信息。</p>
+        
+        <div class="file-input" onclick="document.getElementById('jsonFile').click()">
+            <input type="file" id="jsonFile" accept=".json" style="display: none;">
+            <p>📁 点击选择JSON文件</p>
+        </div>
+        
+        <div id="fileInfo" class="info-box" style="display: none;">
+            <h3>文件信息</h3>
+            <div id="fileSizeInfo"></div>
+        </div>
+        
+        <div id="photosContainer" style="display: none;">
+            <h3>照片预览</h3>
+            <div id="photosList"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('jsonFile').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const jsonData = JSON.parse(e.target.result);
+                    analyzeJSON(file, jsonData);
+                } catch (error) {
+                    alert('文件格式错误：' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        function analyzeJSON(file, data) {
+            // 显示文件基本信息
+            const fileInfo = document.getElementById('fileInfo');
+            const fileSizeInfo = document.getElementById('fileSizeInfo');
+            
+            const fileSize = (file.size / 1024 / 1024).toFixed(2);
+            const photoCount = Array.isArray(data) ? data.length : 0;
+            
+            fileSizeInfo.innerHTML = `
+                <div class="size-info">
+                    <strong>文件大小：</strong> ${fileSize} MB<br>
+                    <strong>照片数量：</strong> ${photoCount} 张<br>
+                    <strong>平均每张：</strong> ${photoCount > 0 ? (file.size / photoCount / 1024).toFixed(1) : 0} KB
+                </div>
+            `;
+            fileInfo.style.display = 'block';
+            
+            // 显示照片预览
+            if (photoCount > 0) {
+                const photosContainer = document.getElementById('photosContainer');
+                const photosList = document.getElementById('photosList');
+                
+                photosList.innerHTML = '';
+                
+                data.forEach((photo, index) => {
+                    if (photo.src && photo.src.startsWith('data:image')) {
+                        const photoDiv = document.createElement('div');
+                        photoDiv.className = 'photo-preview';
+                        
+                        // 计算base64数据大小
+                        const base64Size = (photo.src.length * 0.75 / 1024).toFixed(1);
+                        
+                        photoDiv.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 20px;">
+                                <img src="${photo.src}" alt="${photo.alt || '未命名'}" />
+                                <div>
+                                    <h4>${photo.alt || '未命名照片'}</h4>
+                                    <p><strong>地点：</strong> ${photo.location || '未知'}</p>
+                                    <p><strong>时间：</strong> ${photo.photoDate || '未知'}</p>
+                                    <p><strong>大小：</strong> ${base64Size} KB</p>
+                                    <p><strong>格式：</strong> ${photo.src.substring(5, photo.src.indexOf(';'))}</p>
+                                </div>
+                            </div>
+                        `;
+                        
+                        photosList.appendChild(photoDiv);
+                    }
+                });
+                
+                photosContainer.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html> 
