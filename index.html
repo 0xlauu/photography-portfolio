@@ -407,11 +407,19 @@
     </div>
     
     <div>
-      <p class="text-xs font-thin text-gray-600 title-font">
-        <a href="https://0xlau.com" target="_blank" class="hover:text-gray-800 transition-colors">
-          0xlau.com
-        </a>
-      </p>
+      <div class="space-y-2">
+        <!-- 导入照片数据按钮 -->
+        <button onclick="showImportDialog()" 
+                class="text-xs text-blue-600 hover:text-blue-800 transition-colors block">
+          📥 导入照片数据
+        </button>
+        
+        <p class="text-xs font-thin text-gray-600 title-font">
+          <a href="https://0xlau.com" target="_blank" class="hover:text-gray-800 transition-colors">
+            0xlau.com
+          </a>
+        </p>
+      </div>
     </div>
   </aside>
 
@@ -456,7 +464,40 @@
     </div>
   </div>
 
-
+  <!-- 导入数据对话框 -->
+  <div id="importDialog" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+      <div class="text-center mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">导入照片数据</h3>
+        <p class="text-sm text-gray-600">从本地管理后台导出的JSON文件导入您的照片</p>
+      </div>
+      
+      <div class="space-y-4">
+        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+          <input type="file" id="importFileInput" accept=".json" class="hidden">
+          <button onclick="document.getElementById('importFileInput').click()" 
+                  class="text-blue-600 hover:text-blue-800">
+            📁 选择JSON文件
+          </button>
+          <p class="text-xs text-gray-500 mt-2">选择从管理后台导出的备份文件</p>
+        </div>
+        
+        <div class="text-xs text-gray-500 bg-gray-50 p-3 rounded">
+          <p class="font-medium mb-1">💡 如何获取照片数据：</p>
+          <p>1. 访问本地管理后台 (localhost:8000/admin.html)</p>
+          <p>2. 点击"导出照片"按钮</p>
+          <p>3. 下载JSON文件后在此处导入</p>
+        </div>
+      </div>
+      
+      <div class="flex justify-end space-x-3 mt-6">
+        <button onclick="closeImportDialog()" 
+                class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+          取消
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script>
     // 默认示例照片数据 (可以预设一些示例照片)
@@ -650,11 +691,91 @@
       }
     }
 
+    // 导入对话框功能
+    function showImportDialog() {
+      document.getElementById('importDialog').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeImportDialog() {
+      document.getElementById('importDialog').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // 处理文件导入
+    function handleImportFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedPhotos = JSON.parse(e.target.result);
+          if (!Array.isArray(importedPhotos)) {
+            throw new Error('文件格式不正确');
+          }
+          
+          // 验证数据格式
+          const validPhotos = importedPhotos.filter(photo => 
+            photo.src && photo.alt && photo.location && photo.isUserPhoto
+          );
+          
+          if (validPhotos.length === 0) {
+            alert('文件中没有有效的照片数据！');
+            return;
+          }
+          
+          // 保存到localStorage
+          localStorage.setItem('userPhotos', JSON.stringify(validPhotos));
+          
+          // 更新显示
+          const savedPhotos = localStorage.getItem('userPhotos');
+          const userPhotos = savedPhotos ? JSON.parse(savedPhotos) : [];
+          photos = userPhotos.length > 0 ? [...userPhotos] : [...defaultPhotos];
+          renderPhotos();
+          
+          // 关闭对话框
+          closeImportDialog();
+          
+          // 显示成功消息
+          showMessage(`成功导入 ${validPhotos.length} 张照片！`, 'success');
+          
+        } catch (error) {
+          console.error('Import error:', error);
+          alert('导入失败：文件格式不正确或数据损坏');
+        }
+      };
+      
+      reader.readAsText(file);
+      
+      // 清空input，允许重复选择相同文件
+      event.target.value = '';
+    }
+
+    // 显示消息提示
+    function showMessage(message, type = 'info') {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 
+        type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+      }`;
+      messageDiv.textContent = message;
+      
+      document.body.appendChild(messageDiv);
+      
+      setTimeout(() => {
+        messageDiv.remove();
+      }, 3000);
+    }
+
     // 确保函数全局可访问
     window.openGallery = openGallery;
     window.closeGallery = closeGallery;
     window.nextImage = nextImage;
     window.previousImage = previousImage;
+    window.showImportDialog = showImportDialog;
+    window.closeImportDialog = closeImportDialog;
 
     // 渲染照片网格
     function renderPhotos() {
@@ -723,6 +844,12 @@
     // 页面加载时初始化
     document.addEventListener('DOMContentLoaded', function() {
       initPhotos();
+      
+      // 绑定文件输入事件
+      const importFileInput = document.getElementById('importFileInput');
+      if (importFileInput) {
+        importFileInput.addEventListener('change', handleImportFile);
+      }
     });
   </script>
 </body>
