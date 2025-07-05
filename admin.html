@@ -264,6 +264,43 @@
         </div>
       </div>
       
+      <!-- 筛选控件 -->
+      <div class="bg-gray-50 rounded-lg p-4 mb-6">
+        <div class="flex flex-wrap gap-4 items-center">
+          <div class="flex items-center space-x-2">
+            <label class="text-sm font-medium text-gray-700">筛选：</label>
+          </div>
+          
+          <!-- 地点筛选 -->
+          <div class="flex items-center space-x-2">
+            <label class="text-sm text-gray-600">地点：</label>
+            <select id="locationFilter" onchange="applyFilters()" 
+                    class="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">全部地点</option>
+            </select>
+          </div>
+          
+          <!-- 时间筛选 -->
+          <div class="flex items-center space-x-2">
+            <label class="text-sm text-gray-600">时间：</label>
+            <input type="text" id="timeFilter" onkeyup="applyFilters()" 
+                   placeholder="输入时间关键词" 
+                   class="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-40">
+          </div>
+          
+          <!-- 清除筛选 -->
+          <button onclick="clearFilters()" 
+                  class="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+            清除筛选
+          </button>
+          
+          <!-- 筛选结果显示 -->
+          <div class="text-sm text-gray-500">
+            <span id="filterResult"></span>
+          </div>
+        </div>
+      </div>
+      
       <div class="masonry">
         <!-- 照片将通过JavaScript动态加载 -->
       </div>
@@ -304,23 +341,24 @@
           <!-- 照片信息 -->
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">照片标题 *</label>
-              <input type="text" id="photoTitle" required 
+              <label class="block text-sm font-medium text-gray-700 mb-2">照片标题</label>
+              <input type="text" id="photoTitle" 
                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                     placeholder="请输入照片标题">
+                     placeholder="请输入照片标题（可选）">
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">拍摄地点 *</label>
-              <input type="text" id="photoLocation" required 
+              <label class="block text-sm font-medium text-gray-700 mb-2">拍摄地点</label>
+              <input type="text" id="photoLocation" 
                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                     placeholder="例如：北京，中国">
+                     placeholder="例如：北京，中国（可选）">
             </div>
             
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">拍摄时间</label>
-              <input type="datetime-local" id="photoDate" 
-                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <input type="text" id="photoDate" 
+                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                     placeholder="例如：2025/01/15 或 2025年春天（可选）">
             </div>
             
             <div>
@@ -353,6 +391,7 @@
   <script>
     // 照片数据管理
     let photos = [];
+    let filteredPhotos = [];
     let currentImageIndex = 0;
     let isManageMode = false;
 
@@ -361,6 +400,8 @@
       const savedPhotos = localStorage.getItem('userPhotos');
       const userPhotos = savedPhotos ? JSON.parse(savedPhotos) : [];
       photos = [...userPhotos];
+      filteredPhotos = [...photos];
+      updateLocationFilter();
       renderPhotos();
       updateStats();
     }
@@ -394,7 +435,10 @@
       
       document.getElementById('totalPhotos').textContent = photos.length;
       document.getElementById('userPhotos').textContent = userPhotoCount;
-      document.getElementById('photoCount').textContent = photos.length;
+      document.getElementById('photoCount').textContent = filteredPhotos.length;
+      
+      // 更新筛选结果显示
+      updateFilterResult();
       
       const storageElement = document.getElementById('storageUsage');
       if (storageElement) {
@@ -563,16 +607,6 @@
         return;
       }
       
-      if (!title.trim()) {
-        alert('请输入照片标题');
-        return;
-      }
-      
-      if (!location.trim()) {
-        alert('请输入拍摄地点');
-        return;
-      }
-      
       const file = fileInput.files[0];
       
       try {
@@ -584,9 +618,9 @@
         
         const newPhoto = {
           src: compressedDataUrl,
-          alt: title.trim(),
-          location: location.trim(),
-          photoDate: photoDate || null,
+          alt: title.trim() || '未命名照片',
+          location: location.trim() || '未知地点',
+          photoDate: photoDate.trim() || null,
           description: description.trim(),
           isUserPhoto: true,
           uploadDate: new Date().toISOString()
@@ -599,8 +633,9 @@
         saveUserPhotos();
         localStorage.setItem('lastUpdate', new Date().toISOString());
         
-        // 重新渲染照片网格
-        renderPhotos();
+        // 更新筛选数据
+        clearFilters();
+        updateLocationFilter();
         
         // 关闭模态框
         closeUploadModal();
@@ -614,27 +649,114 @@
       }
     }
 
+    // 更新地点筛选下拉框
+    function updateLocationFilter() {
+      const locationFilter = document.getElementById('locationFilter');
+      if (!locationFilter) return;
+      
+      // 获取所有唯一的地点
+      const locations = [...new Set(photos.map(photo => photo.location).filter(loc => loc && loc !== '未知地点'))];
+      
+      // 保存当前选中的值
+      const currentValue = locationFilter.value;
+      
+      // 清空并重新填充选项
+      locationFilter.innerHTML = '<option value="">全部地点</option>';
+      locations.forEach(location => {
+        const option = document.createElement('option');
+        option.value = location;
+        option.textContent = location;
+        locationFilter.appendChild(option);
+      });
+      
+      // 恢复之前选中的值
+      if (currentValue) {
+        locationFilter.value = currentValue;
+      }
+    }
+
+    // 应用筛选
+    function applyFilters() {
+      const locationFilter = document.getElementById('locationFilter').value;
+      const timeFilter = document.getElementById('timeFilter').value.toLowerCase();
+      
+      filteredPhotos = photos.filter(photo => {
+        // 地点筛选
+        const locationMatch = !locationFilter || photo.location === locationFilter;
+        
+        // 时间筛选
+        const timeMatch = !timeFilter || 
+          (photo.photoDate && photo.photoDate.toLowerCase().includes(timeFilter)) ||
+          (photo.uploadDate && new Date(photo.uploadDate).toLocaleDateString().includes(timeFilter));
+        
+        return locationMatch && timeMatch;
+      });
+      
+      renderPhotos();
+      updateFilterResult();
+    }
+
+    // 清除筛选
+    function clearFilters() {
+      document.getElementById('locationFilter').value = '';
+      document.getElementById('timeFilter').value = '';
+      filteredPhotos = [...photos];
+      renderPhotos();
+      updateFilterResult();
+    }
+
+    // 更新筛选结果显示
+    function updateFilterResult() {
+      const filterResult = document.getElementById('filterResult');
+      if (!filterResult) return;
+      
+      if (filteredPhotos.length === photos.length) {
+        filterResult.textContent = '';
+      } else {
+        filterResult.textContent = `显示 ${filteredPhotos.length} / ${photos.length} 张照片`;
+      }
+    }
+
     // 渲染照片网格
     function renderPhotos() {
       const masonryContainer = document.querySelector('.masonry');
       masonryContainer.innerHTML = '';
       
-      if (photos.length === 0) {
-        masonryContainer.innerHTML = `
-          <div class="col-span-full w-full text-center py-16">
-            <div class="text-gray-400 mb-4">
-              <svg class="mx-auto h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-              </svg>
+      if (filteredPhotos.length === 0) {
+        let emptyMessage = '';
+        if (photos.length === 0) {
+          emptyMessage = `
+            <div class="col-span-full w-full text-center py-16">
+              <div class="text-gray-400 mb-4">
+                <svg class="mx-auto h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+              </div>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">暂无照片</h3>
+              <p class="text-sm text-gray-600 mb-6">点击上方"上传新照片"按钮开始添加作品</p>
             </div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">暂无照片</h3>
-            <p class="text-sm text-gray-600 mb-6">点击上方"上传新照片"按钮开始添加作品</p>
-          </div>
-        `;
+          `;
+        } else {
+          emptyMessage = `
+            <div class="col-span-full w-full text-center py-16">
+              <div class="text-gray-400 mb-4">
+                <svg class="mx-auto h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.239 0-4.294-.967-5.707-2.518M15 13.381V4a4 4 0 00-7.914-.792M14 8h4v3h-4V8z"></path>
+                </svg>
+              </div>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">没有匹配的照片</h3>
+              <p class="text-sm text-gray-600 mb-6">试试调整筛选条件或清除筛选</p>
+              <button onclick="clearFilters()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                清除筛选
+              </button>
+            </div>
+          `;
+        }
+        masonryContainer.innerHTML = emptyMessage;
         return;
       }
       
-      photos.forEach((photo, index) => {
+      filteredPhotos.forEach((photo, index) => {
         const photoDiv = document.createElement('div');
         photoDiv.className = 'photo-item fade-in mb-4 relative group';
         photoDiv.style.animationDelay = `${index * 0.1}s`;
@@ -655,7 +777,7 @@
             
             <!-- 删除按钮 -->
             ${photo.isUserPhoto ? `
-              <button onclick="deletePhoto(${index})" 
+              <button onclick="deletePhoto('${photo.uploadDate}')" 
                       class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center ${isManageMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity text-sm hover:bg-red-600 font-bold">
                 ×
               </button>
@@ -668,13 +790,19 @@
     }
 
     // 删除照片
-    function deletePhoto(index) {
-      const photo = photos[index];
+    function deletePhoto(uploadDate) {
+      const photoIndex = photos.findIndex(photo => photo.uploadDate === uploadDate);
+      if (photoIndex === -1) return;
+      
+      const photo = photos[photoIndex];
       if (confirm(`确定要删除照片"${photo.alt}"吗？此操作不可撤销！`)) {
-        photos.splice(index, 1);
+        photos.splice(photoIndex, 1);
+        filteredPhotos = filteredPhotos.filter(p => p.uploadDate !== uploadDate);
         saveUserPhotos();
         localStorage.setItem('lastUpdate', new Date().toISOString());
+        updateLocationFilter();
         renderPhotos();
+        updateFilterResult();
         showMessage('照片已删除', 'info');
       }
     }
@@ -830,6 +958,10 @@
       });
       document.getElementById('currentTime').textContent = timeString;
     }
+
+    // 确保函数全局可访问
+    window.applyFilters = applyFilters;
+    window.clearFilters = clearFilters;
 
     // 页面加载时初始化
     document.addEventListener('DOMContentLoaded', function() {
