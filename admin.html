@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MagicSea - 后台管理</title>
+  <meta name="description" content="MagicSea 摄影作品集后台管理">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+    }
+    
+    .title-font {
+      font-family: 'Playfair Display', serif;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+    
+    .photo-item {
+      transition: transform 0.2s ease;
+      break-inside: avoid;
+    }
+    
+    .photo-item:hover {
+      transform: scale(1.02);
+    }
+    
+    .photo-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    
+    .masonry {
+      column-count: 2;
+      column-gap: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+      .masonry {
+        column-count: 3;
+        column-gap: 1rem;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .masonry {
+        column-count: 4;
+        column-gap: 1rem;
+      }
+    }
+    
+    .drag-over {
+      border-color: #3b82f6 !important;
+      background-color: #eff6ff;
+    }
+    
+    .upload-area {
+      transition: all 0.3s ease;
+    }
+    
+    .fade-in {
+      opacity: 0;
+      animation: fadeIn 0.6s ease-in forwards;
+    }
+    
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    
+    .admin-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .stat-card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e5e7eb;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+      border: none;
+      color: white;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-danger:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      border: none;
+      color: white;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-success:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+  <!-- 头部导航 -->
+  <header class="admin-header shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-6">
+        <div>
+          <h1 class="text-2xl font-bold title-font">MagicSea 后台管理</h1>
+          <p class="text-blue-100 text-sm mt-1">Photography Collection Admin</p>
+        </div>
+        <div class="flex items-center space-x-4">
+          <a href="index.html" target="_blank" 
+             class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            🔗 预览网站
+          </a>
+          <div class="text-sm text-blue-100">
+            <span id="currentTime"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主要内容区 -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- 统计卡片 -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="stat-card">
+        <div class="flex items-center">
+          <div class="p-3 bg-blue-100 rounded-lg">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm text-gray-600">总照片数</p>
+            <p class="text-2xl font-bold text-gray-900" id="totalPhotos">0</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="flex items-center">
+          <div class="p-3 bg-green-100 rounded-lg">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4H5a2 2 0 00-2 2v11a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M7 4h10M11 9h2M11 13h2M11 17h2"></path>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm text-gray-600">用户照片</p>
+            <p class="text-2xl font-bold text-gray-900" id="userPhotos">0</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="flex items-center">
+          <div class="p-3 bg-yellow-100 rounded-lg">
+            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm text-gray-600">存储使用</p>
+            <p class="text-2xl font-bold text-gray-900" id="storageUsage">0%</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="flex items-center">
+          <div class="p-3 bg-purple-100 rounded-lg">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm text-gray-600">最后更新</p>
+            <p class="text-sm font-medium text-gray-900" id="lastUpdate">刚刚</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作按钮区 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      
+      <!-- 上传照片 -->
+      <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">📸 上传照片</h3>
+        <p class="text-sm text-gray-600 mb-4">添加新的摄影作品到您的作品集</p>
+        <button onclick="openUploadModal()" 
+                class="w-full px-4 py-2 btn-primary rounded-lg font-medium hover:shadow-lg transition-all">
+          + 上传新照片
+        </button>
+      </div>
+      
+      <!-- 管理照片 -->
+      <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">🛠️ 管理照片</h3>
+        <p class="text-sm text-gray-600 mb-4">编辑或删除现有的照片</p>
+        <button onclick="toggleManageMode()" id="manageBtn"
+                class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors">
+          管理模式
+        </button>
+      </div>
+      
+      <!-- 数据管理 -->
+      <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">💾 数据管理</h3>
+        <p class="text-sm text-gray-600 mb-4">备份和恢复您的照片数据</p>
+        <div class="space-y-2">
+          <button onclick="exportPhotos()" 
+                  class="w-full px-4 py-2 btn-success rounded-lg font-medium text-sm">
+            导出照片
+          </button>
+          <button onclick="importPhotos()" 
+                  class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors">
+            导入照片
+          </button>
+          <button onclick="clearStorage()" 
+                  class="w-full px-4 py-2 btn-danger rounded-lg font-medium text-sm">
+            清理存储
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 照片网格 -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-semibold text-gray-900">照片管理</h3>
+        <div class="flex items-center space-x-2">
+          <span class="text-sm text-gray-500">共 <span id="photoCount">0</span> 张照片</span>
+        </div>
+      </div>
+      
+      <div class="masonry">
+        <!-- 照片将通过JavaScript动态加载 -->
+      </div>
+    </div>
+  </main>
+
+  <!-- 上传照片模态框 -->
+  <div id="uploadModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-semibold text-gray-900">上传新照片</h3>
+          <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+        </div>
+        
+        <form id="uploadForm" onsubmit="handleUpload(event)">
+          <!-- 文件选择 -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">选择照片</label>
+            <div id="uploadArea" class="upload-area w-full p-8 border-2 border-dashed border-gray-300 rounded-lg text-center cursor-pointer hover:border-gray-400 transition-colors">
+              <input type="file" id="photoFile" accept="image/*" required class="hidden">
+              <div id="uploadText">
+                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <p class="text-gray-600 mb-2">点击选择照片或拖拽文件到此处</p>
+                <p class="text-sm text-gray-500">支持 JPG, PNG, GIF 格式，最大10MB</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 预览区域 -->
+          <div id="previewContainer" class="mb-6 hidden">
+            <img id="previewImage" src="" alt="预览" class="w-full h-48 object-cover rounded-lg">
+            <p id="fileInfo" class="text-sm text-gray-500 mt-2"></p>
+          </div>
+          
+          <!-- 照片信息 -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">照片标题 *</label>
+              <input type="text" id="photoTitle" required 
+                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                     placeholder="请输入照片标题">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">拍摄地点 *</label>
+              <input type="text" id="photoLocation" required 
+                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                     placeholder="例如：北京，中国">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">照片描述</label>
+              <textarea id="photoDescription" rows="3" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="描述这张照片的故事..."></textarea>
+            </div>
+          </div>
+          
+          <!-- 按钮 -->
+          <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+            <button type="button" onclick="closeUploadModal()" 
+                    class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              取消
+            </button>
+            <button type="submit" 
+                    class="px-4 py-2 btn-primary rounded-lg font-medium">
+              上传照片
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 隐藏的导入文件输入 -->
+  <input type="file" id="importFile" accept=".json" style="display: none;">
+
+  <script>
+    // 照片数据管理
+    let photos = [];
+    let currentImageIndex = 0;
+    let isManageMode = false;
+
+    // 初始化照片数据
+    function initPhotos() {
+      const savedPhotos = localStorage.getItem('userPhotos');
+      const userPhotos = savedPhotos ? JSON.parse(savedPhotos) : [];
+      photos = [...userPhotos];
+      renderPhotos();
+      updateStats();
+    }
+
+    // 保存用户照片到localStorage
+    function saveUserPhotos() {
+      try {
+        const userPhotos = photos.filter(photo => photo.isUserPhoto);
+        localStorage.setItem('userPhotos', JSON.stringify(userPhotos));
+        updateStats();
+        
+        // 定期提醒用户导出照片
+        if (userPhotos.length > 0 && userPhotos.length % 10 === 0) {
+          showMessage('提醒：建议定期导出照片以防数据丢失', 'info');
+        }
+      } catch (error) {
+        if (error.name === 'QuotaExceededError') {
+          alert('存储空间不足！照片太大或数量太多。建议：\n1. 导出现有照片\n2. 清理存储\n3. 压缩照片后再上传');
+          console.error('localStorage quota exceeded:', error);
+        } else {
+          console.error('Error saving photos:', error);
+          alert('保存失败，建议立即导出照片备份！');
+        }
+      }
+    }
+
+    // 更新统计信息
+    function updateStats() {
+      const userPhotoCount = photos.filter(photo => photo.isUserPhoto).length;
+      const storageInfo = getStorageInfo();
+      
+      document.getElementById('totalPhotos').textContent = photos.length;
+      document.getElementById('userPhotos').textContent = userPhotoCount;
+      document.getElementById('photoCount').textContent = photos.length;
+      
+      const storageElement = document.getElementById('storageUsage');
+      if (storageElement) {
+        storageElement.textContent = `${storageInfo.percentage}%`;
+        storageElement.className = storageInfo.percentage > 80 ? 'text-2xl font-bold text-red-600' : 'text-2xl font-bold text-gray-900';
+      }
+      
+      // 更新最后更新时间
+      const lastUpdate = localStorage.getItem('lastUpdate');
+      if (lastUpdate) {
+        const updateTime = new Date(lastUpdate);
+        const now = new Date();
+        const diffMinutes = Math.floor((now - updateTime) / (1000 * 60));
+        
+        let timeText = '刚刚';
+        if (diffMinutes > 0) {
+          if (diffMinutes < 60) {
+            timeText = `${diffMinutes} 分钟前`;
+          } else if (diffMinutes < 1440) {
+            timeText = `${Math.floor(diffMinutes / 60)} 小时前`;
+          } else {
+            timeText = `${Math.floor(diffMinutes / 1440)} 天前`;
+          }
+        }
+        document.getElementById('lastUpdate').textContent = timeText;
+      }
+    }
+
+    // 获取存储使用情况
+    function getStorageInfo() {
+      try {
+        const used = JSON.stringify(localStorage).length;
+        const quota = 5 * 1024 * 1024; // 假设5MB限制
+        return {
+          used: used,
+          quota: quota,
+          percentage: Math.round((used / quota) * 100)
+        };
+      } catch (e) {
+        return { used: 0, quota: 0, percentage: 0 };
+      }
+    }
+
+    // 上传模态框控制
+    function openUploadModal() {
+      document.getElementById('uploadModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeUploadModal() {
+      document.getElementById('uploadModal').classList.add('hidden');
+      document.body.style.overflow = '';
+      // 重置表单
+      const form = document.getElementById('uploadForm');
+      if (form) form.reset();
+      const previewContainer = document.getElementById('previewContainer');
+      if (previewContainer) previewContainer.classList.add('hidden');
+    }
+
+    // 图片压缩函数
+    function compressImage(file, maxWidth = 1200, quality = 0.8) {
+      return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        img.onload = function() {
+          // 计算新的尺寸
+          let { width, height } = img;
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          // 设置canvas尺寸
+          canvas.width = width;
+          canvas.height = height;
+          
+          // 绘制压缩后的图片
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // 转换为base64
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedDataUrl);
+        };
+        
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    // 文件预览功能
+    function handleFileSelect(file) {
+      if (file) {
+        // 检查文件大小（10MB限制）
+        if (file.size > 10 * 1024 * 1024) {
+          alert('文件太大！请选择小于10MB的图片。');
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('previewImage').src = e.target.result;
+          document.getElementById('previewContainer').classList.remove('hidden');
+          
+          // 显示文件信息
+          const fileInfo = document.getElementById('fileInfo');
+          if (fileInfo) {
+            const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+            fileInfo.textContent = `文件大小: ${sizeInMB} MB | 压缩后约: ${(sizeInMB * 0.3).toFixed(2)} MB`;
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // 初始化拖拽上传功能
+    function initUploadArea() {
+      const uploadArea = document.getElementById('uploadArea');
+      const fileInput = document.getElementById('photoFile');
+
+      if (!uploadArea || !fileInput) return;
+
+      uploadArea.addEventListener('click', () => {
+        fileInput.click();
+      });
+
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+      });
+
+      uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+      });
+
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0 && files[0].type.startsWith('image/')) {
+          fileInput.files = files;
+          handleFileSelect(files[0]);
+        }
+      });
+
+      // 绑定文件输入变化事件
+      fileInput.addEventListener('change', function(e) {
+        handleFileSelect(e.target.files[0]);
+      });
+    }
+
+    // 处理照片上传
+    async function handleUpload(event) {
+      event.preventDefault();
+      
+      const fileInput = document.getElementById('photoFile');
+      const title = document.getElementById('photoTitle').value;
+      const location = document.getElementById('photoLocation').value;
+      const description = document.getElementById('photoDescription').value;
+      
+      if (!fileInput || !fileInput.files[0]) {
+        alert('请选择一张照片');
+        return;
+      }
+      
+      if (!title.trim()) {
+        alert('请输入照片标题');
+        return;
+      }
+      
+      if (!location.trim()) {
+        alert('请输入拍摄地点');
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      
+      try {
+        // 显示压缩进度
+        showMessage('正在压缩图片...', 'info');
+        
+        // 压缩图片
+        const compressedDataUrl = await compressImage(file);
+        
+        const newPhoto = {
+          src: compressedDataUrl,
+          alt: title.trim(),
+          location: location.trim(),
+          description: description.trim(),
+          isUserPhoto: true,
+          uploadDate: new Date().toISOString()
+        };
+        
+        // 添加到照片数组开头（最新的在前面）
+        photos.unshift(newPhoto);
+        
+        // 保存到localStorage
+        saveUserPhotos();
+        localStorage.setItem('lastUpdate', new Date().toISOString());
+        
+        // 重新渲染照片网格
+        renderPhotos();
+        
+        // 关闭模态框
+        closeUploadModal();
+        
+        // 显示成功消息
+        showMessage('照片上传成功！', 'success');
+        
+      } catch (error) {
+        console.error('Upload error:', error);
+        alert('上传失败，请重试');
+      }
+    }
+
+    // 渲染照片网格
+    function renderPhotos() {
+      const masonryContainer = document.querySelector('.masonry');
+      masonryContainer.innerHTML = '';
+      
+      if (photos.length === 0) {
+        masonryContainer.innerHTML = `
+          <div class="col-span-full w-full text-center py-16">
+            <div class="text-gray-400 mb-4">
+              <svg class="mx-auto h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">暂无照片</h3>
+            <p class="text-sm text-gray-600 mb-6">点击上方"上传新照片"按钮开始添加作品</p>
+          </div>
+        `;
+        return;
+      }
+      
+      photos.forEach((photo, index) => {
+        const photoDiv = document.createElement('div');
+        photoDiv.className = 'photo-item fade-in mb-4 relative group';
+        photoDiv.style.animationDelay = `${index * 0.1}s`;
+        
+        photoDiv.innerHTML = `
+          <div class="relative">
+            <img src="${photo.src}" 
+                 alt="${photo.alt}" 
+                 class="w-full h-auto block rounded-lg shadow-sm" />
+            
+            <!-- 照片信息覆盖层 -->
+            <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-50 transition-all duration-300 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <div class="text-white text-center p-4">
+                <h4 class="font-medium text-sm mb-1">${photo.alt}</h4>
+                <p class="text-xs text-gray-300">${photo.location}</p>
+              </div>
+            </div>
+            
+            <!-- 删除按钮 -->
+            ${photo.isUserPhoto ? `
+              <button onclick="deletePhoto(${index})" 
+                      class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center ${isManageMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity text-sm hover:bg-red-600 font-bold">
+                ×
+              </button>
+            ` : ''}
+          </div>
+        `;
+        
+        masonryContainer.appendChild(photoDiv);
+      });
+    }
+
+    // 删除照片
+    function deletePhoto(index) {
+      const photo = photos[index];
+      if (confirm(`确定要删除照片"${photo.alt}"吗？此操作不可撤销！`)) {
+        photos.splice(index, 1);
+        saveUserPhotos();
+        localStorage.setItem('lastUpdate', new Date().toISOString());
+        renderPhotos();
+        showMessage('照片已删除', 'info');
+      }
+    }
+
+    // 管理模式
+    function toggleManageMode() {
+      isManageMode = !isManageMode;
+      const manageBtn = document.getElementById('manageBtn');
+      
+      if (isManageMode) {
+        manageBtn.textContent = '退出管理';
+        manageBtn.className = 'w-full px-4 py-2 btn-danger rounded-lg font-medium';
+        showMessage('管理模式已开启，可以删除照片', 'info');
+      } else {
+        manageBtn.textContent = '管理模式';
+        manageBtn.className = 'w-full px-4 py-2 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors';
+        showMessage('管理模式已关闭', 'info');
+      }
+      
+      // 重新渲染照片以更新删除按钮显示
+      renderPhotos();
+    }
+
+    // 导出照片数据
+    function exportPhotos() {
+      const userPhotos = photos.filter(photo => photo.isUserPhoto);
+      if (userPhotos.length === 0) {
+        alert('没有可导出的照片！');
+        return;
+      }
+      
+      const dataStr = JSON.stringify(userPhotos, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `photos_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      showMessage(`成功导出 ${userPhotos.length} 张照片！`, 'success');
+    }
+
+    // 导入照片数据
+    function importPhotos() {
+      const fileInput = document.getElementById('importFile');
+      if (!fileInput) return;
+      
+      fileInput.onchange = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const importedPhotos = JSON.parse(e.target.result);
+            if (!Array.isArray(importedPhotos)) {
+              throw new Error('文件格式不正确');
+            }
+            
+            // 验证数据格式
+            const validPhotos = importedPhotos.filter(photo => 
+              photo.src && photo.alt && photo.location && photo.isUserPhoto
+            );
+            
+            if (validPhotos.length === 0) {
+              alert('文件中没有有效的照片数据！');
+              return;
+            }
+            
+            // 询问是否替换现有照片
+            const userPhotos = photos.filter(p => p.isUserPhoto);
+            let shouldImport = true;
+            
+            if (userPhotos.length > 0) {
+              shouldImport = confirm(`检测到已有 ${userPhotos.length} 张照片。\n导入的 ${validPhotos.length} 张照片将会添加到现有照片中。\n是否继续？`);
+            }
+            
+            if (shouldImport) {
+              // 添加导入的照片到数组开头
+              validPhotos.forEach(photo => {
+                photos.unshift(photo);
+              });
+              
+              // 保存到localStorage
+              saveUserPhotos();
+              localStorage.setItem('lastUpdate', new Date().toISOString());
+              
+              // 重新渲染
+              renderPhotos();
+              
+              showMessage(`成功导入 ${validPhotos.length} 张照片！`, 'success');
+            }
+            
+          } catch (error) {
+            console.error('Import error:', error);
+            alert('导入失败：文件格式不正确或数据损坏');
+          }
+        };
+        
+        reader.readAsText(file);
+        
+        // 清空input，允许重复选择相同文件
+        event.target.value = '';
+      };
+      
+      fileInput.click();
+    }
+
+    // 清理存储功能
+    function clearStorage() {
+      if (confirm('确定要清理所有用户照片吗？此操作不可撤销！')) {
+        localStorage.removeItem('userPhotos');
+        localStorage.removeItem('lastUpdate');
+        // 重新初始化
+        photos = [];
+        renderPhotos();
+        updateStats();
+        showMessage('存储已清理', 'info');
+      }
+    }
+
+    // 显示消息提示
+    function showMessage(message, type = 'info') {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 
+        type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+      }`;
+      messageDiv.textContent = message;
+      
+      document.body.appendChild(messageDiv);
+      
+      setTimeout(() => {
+        messageDiv.remove();
+      }, 3000);
+    }
+
+    // 更新当前时间
+    function updateCurrentTime() {
+      const now = new Date();
+      const timeString = now.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      document.getElementById('currentTime').textContent = timeString;
+    }
+
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      initPhotos();
+      initUploadArea();
+      updateCurrentTime();
+      
+      // 每秒更新时间
+      setInterval(updateCurrentTime, 1000);
+      
+      // 每分钟更新统计
+      setInterval(updateStats, 60000);
+    });
+  </script>
+</body>
+</html> 

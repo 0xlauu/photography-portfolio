@@ -396,30 +396,14 @@
       <h1 class="text-xl md:text-2xl text-gray-800 title-font">
         MagicSea
       </h1>
-      <!-- 添加上传按钮 -->
-      <button onclick="openUploadModal()" 
-              class="mt-4 px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors w-full">
-        + 上传照片
-      </button>
-      
-      <!-- 管理按钮 -->
-      <button onclick="toggleManageMode()" id="manageBtn"
-              class="mt-2 px-4 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-500 transition-colors w-full">
-        管理照片
-      </button>
-      
-      <!-- 清理存储按钮 -->
-      <button onclick="clearStorage()" 
-              class="mt-2 px-4 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-500 transition-colors w-full">
-        清理存储
-      </button>
+      <p class="text-sm text-gray-600 mt-4 leading-relaxed">
+        Photography Collection
+      </p>
     </div>
     
     <div>
       <div id="photoStats" class="mb-2 text-xs text-gray-600">
-        <p>总照片: <span id="totalPhotos">0</span></p>
-        <p>我的照片: <span id="userPhotos">0</span></p>
-        <p>存储使用: <span id="storageUsage">0%</span></p>
+        <p>照片总数: <span id="totalPhotos">0</span></p>
       </div>
       <p class="text-xs font-thin text-gray-600 title-font">
         0xlau.com
@@ -468,82 +452,35 @@
     </div>
   </div>
 
-  <!-- 上传照片模态框 -->
-  <div id="uploadModal" class="fixed inset-0 z-50 hidden" style="background-color: rgba(250, 249, 247, 0.95);">
-    <div class="w-full h-full flex items-center justify-center p-8">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold text-gray-800">上传新照片</h3>
-          <button onclick="closeUploadModal()" class="text-gray-500 hover:text-gray-700 text-xl">×</button>
-        </div>
-        
-        <form id="uploadForm" onsubmit="handleUpload(event)">
-          <!-- 文件选择 -->
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">选择照片</label>
-            <div id="uploadArea" class="upload-area w-full p-6 border-2 border-dashed border-gray-300 rounded-md text-center cursor-pointer hover:border-gray-400">
-              <input type="file" id="photoFile" accept="image/*" required class="hidden">
-              <div id="uploadText">
-                <svg class="mx-auto h-12 w-12 text-gray-400 mb-2" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <p class="text-sm text-gray-600">点击选择照片或拖拽文件到此处</p>
-                <p class="text-xs text-gray-500 mt-1">支持 JPG, PNG, GIF 格式</p>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 预览区域 -->
-          <div id="previewContainer" class="mb-4 hidden">
-            <img id="previewImage" src="" alt="预览" class="w-full h-48 object-cover rounded-md">
-            <p id="fileInfo" class="text-xs text-gray-500 mt-1"></p>
-          </div>
-          
-          <!-- 标题 -->
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">照片标题</label>
-            <input type="text" id="photoTitle" required 
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                   placeholder="请输入照片标题">
-          </div>
-          
-          <!-- 拍摄地点 -->
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">拍摄地点</label>
-            <input type="text" id="photoLocation" required 
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                   placeholder="例如：北京，中国">
-          </div>
-          
-          <!-- 描述 -->
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">照片描述（可选）</label>
-            <textarea id="photoDescription" rows="3" 
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                      placeholder="描述这张照片的故事..."></textarea>
-          </div>
-          
-          <!-- 按钮 -->
-          <div class="flex justify-end space-x-3">
-            <button type="button" onclick="closeUploadModal()" 
-                    class="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
-              取消
-            </button>
-            <button type="submit" 
-                    class="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700">
-              上传照片
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+
 
   <script>
-    // 默认示例照片数据 (已清空，仅显示用户上传的照片)
-    const defaultPhotos = [];
+    // 默认示例照片数据 (可以预设一些示例照片)
+    const defaultPhotos = [
+      {
+        src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        alt: "山峰日出",
+        location: "Alps, Switzerland",
+        description: "阿尔卑斯山脉的日出时分，金色的阳光洒在雪山之上。",
+        isUserPhoto: false
+      },
+      {
+        src: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        alt: "湖泊倒影",
+        location: "Banff, Canada",
+        description: "清晨的湖泊如镜面般平静，完美倒映着周围的山峦。",
+        isUserPhoto: false
+      },
+      {
+        src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        alt: "森林小径",
+        location: "Oregon, USA",
+        description: "阳光透过茂密的森林，在小径上洒下斑驳的光影。",
+        isUserPhoto: false
+      }
+    ];
 
-    // 用户照片数据管理
+    // 照片数据管理
     let photos = [];
     let currentImageIndex = 0;
 
@@ -553,21 +490,6 @@
       const userPhotos = savedPhotos ? JSON.parse(savedPhotos) : [];
       photos = [...userPhotos, ...defaultPhotos];
       renderPhotos();
-    }
-
-    // 保存用户照片到localStorage
-    function saveUserPhotos() {
-      try {
-        const userPhotos = photos.filter(photo => photo.isUserPhoto);
-        localStorage.setItem('userPhotos', JSON.stringify(userPhotos));
-      } catch (error) {
-        if (error.name === 'QuotaExceededError') {
-          alert('存储空间不足！照片太大或数量太多。建议压缩照片后再上传。');
-          console.error('localStorage quota exceeded:', error);
-        } else {
-          console.error('Error saving photos:', error);
-        }
-      }
     }
 
     // 灯箱功能
@@ -700,185 +622,10 @@
     }
 
     // 确保函数全局可访问
-    window.openUploadModal = openUploadModal;
-    window.closeUploadModal = closeUploadModal;
-    window.handleUpload = handleUpload;
     window.openGallery = openGallery;
     window.closeGallery = closeGallery;
     window.nextImage = nextImage;
     window.previousImage = previousImage;
-    window.deletePhoto = deletePhoto;
-    window.toggleManageMode = toggleManageMode;
-    window.clearStorage = clearStorage;
-
-    function closeUploadModal() {
-      document.getElementById('uploadModal').classList.add('hidden');
-      document.body.style.overflow = '';
-      // 重置表单
-      const form = document.getElementById('uploadForm');
-      if (form) form.reset();
-      const previewContainer = document.getElementById('previewContainer');
-      if (previewContainer) previewContainer.classList.add('hidden');
-    }
-
-    // 图片压缩函数
-    function compressImage(file, maxWidth = 1200, quality = 0.8) {
-      return new Promise((resolve) => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        
-        img.onload = function() {
-          // 计算新的尺寸
-          let { width, height } = img;
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
-          
-          // 设置canvas尺寸
-          canvas.width = width;
-          canvas.height = height;
-          
-          // 绘制压缩后的图片
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          // 转换为base64
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-          resolve(compressedDataUrl);
-        };
-        
-        img.src = URL.createObjectURL(file);
-      });
-    }
-
-    // 文件预览功能
-    function handleFileSelect(file) {
-      if (file) {
-        // 检查文件大小（10MB限制）
-        if (file.size > 10 * 1024 * 1024) {
-          alert('文件太大！请选择小于10MB的图片。');
-          return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          document.getElementById('previewImage').src = e.target.result;
-          document.getElementById('previewContainer').classList.remove('hidden');
-          
-          // 显示文件信息
-          const fileInfo = document.getElementById('fileInfo');
-          if (fileInfo) {
-            const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
-            fileInfo.textContent = `文件大小: ${sizeInMB} MB | 压缩后约: ${(sizeInMB * 0.3).toFixed(2)} MB`;
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-
-
-    // 初始化拖拽上传功能
-    function initUploadArea() {
-      const uploadArea = document.getElementById('uploadArea');
-      const fileInput = document.getElementById('photoFile');
-
-      if (!uploadArea || !fileInput) return;
-
-      uploadArea.addEventListener('click', () => {
-        fileInput.click();
-      });
-
-      uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('drag-over');
-      });
-
-      uploadArea.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('drag-over');
-      });
-
-      uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('drag-over');
-        
-        const files = e.dataTransfer.files;
-        if (files.length > 0 && files[0].type.startsWith('image/')) {
-          fileInput.files = files;
-          handleFileSelect(files[0]);
-        }
-      });
-
-      // 绑定文件输入变化事件
-      fileInput.addEventListener('change', function(e) {
-        handleFileSelect(e.target.files[0]);
-      });
-    }
-
-    // 处理照片上传
-    async function handleUpload(event) {
-      event.preventDefault();
-      
-      const fileInput = document.getElementById('photoFile');
-      const title = document.getElementById('photoTitle').value;
-      const location = document.getElementById('photoLocation').value;
-      const description = document.getElementById('photoDescription').value;
-      
-      if (!fileInput || !fileInput.files[0]) {
-        alert('请选择一张照片');
-        return;
-      }
-      
-      if (!title.trim()) {
-        alert('请输入照片标题');
-        return;
-      }
-      
-      if (!location.trim()) {
-        alert('请输入拍摄地点');
-        return;
-      }
-      
-      const file = fileInput.files[0];
-      
-      try {
-        // 显示压缩进度
-        showMessage('正在压缩图片...', 'info');
-        
-        // 压缩图片
-        const compressedDataUrl = await compressImage(file);
-        
-        const newPhoto = {
-          src: compressedDataUrl,
-          alt: title.trim(),
-          location: location.trim(),
-          description: description.trim(),
-          isUserPhoto: true,
-          uploadDate: new Date().toISOString()
-        };
-        
-        // 添加到照片数组开头（最新的在前面）
-        photos.unshift(newPhoto);
-        
-        // 保存到localStorage
-        saveUserPhotos();
-        
-        // 重新渲染照片网格
-        renderPhotos();
-        
-        // 关闭模态框
-        closeUploadModal();
-        
-        // 显示成功消息
-        showMessage('照片上传成功！', 'success');
-        
-      } catch (error) {
-        console.error('Upload error:', error);
-        alert('上传失败，请重试');
-      }
-    }
 
     // 渲染照片网格
     function renderPhotos() {
@@ -895,11 +642,7 @@
               </svg>
             </div>
             <h3 class="text-lg font-light text-gray-600 mb-2 title-font">暂无照片作品</h3>
-            <p class="text-sm text-gray-500 mb-6">点击左侧"上传照片"按钮开始创建您的摄影作品集</p>
-            <button onclick="openUploadModal()" 
-                    class="px-6 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors">
-              上传第一张照片
-            </button>
+            <p class="text-sm text-gray-500 mb-6">摄影作品集正在筹备中...</p>
           </div>
         `;
         updatePhotoStats();
@@ -919,12 +662,6 @@
                data-full-src="${photo.src}"
                class="cursor-pointer w-full h-auto block"
                onclick="openGallery(${index})" />
-                     ${photo.isUserPhoto ? `
-             <button onclick="deletePhoto(${index})" 
-                     class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center ${isManageMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity text-xs hover:bg-red-600">
-               ×
-             </button>
-           ` : ''}
         `;
         
         masonryContainer.appendChild(photoDiv);
@@ -939,34 +676,7 @@
 
     // 更新照片统计信息
     function updatePhotoStats() {
-      const userPhotoCount = photos.filter(photo => photo.isUserPhoto).length;
-      const storageInfo = getStorageInfo();
-      
       document.getElementById('totalPhotos').textContent = photos.length;
-      document.getElementById('userPhotos').textContent = userPhotoCount;
-      
-      const storageElement = document.getElementById('storageUsage');
-      if (storageElement) {
-        storageElement.textContent = `${storageInfo.percentage}%`;
-        // 根据使用率改变颜色
-        if (storageInfo.percentage > 80) {
-          storageElement.className = 'text-red-600 font-medium';
-        } else if (storageInfo.percentage > 60) {
-          storageElement.className = 'text-orange-600';
-        } else {
-          storageElement.className = '';
-        }
-      }
-    }
-
-    // 删除照片
-    function deletePhoto(index) {
-      if (confirm('确定要删除这张照片吗？')) {
-        photos.splice(index, 1);
-        saveUserPhotos();
-        renderPhotos();
-        showMessage('照片已删除', 'info');
-      }
     }
 
     // 重新应用懒加载
@@ -981,59 +691,9 @@
       });
     }
 
-    // 显示消息提示
-    function showMessage(message, type = 'info') {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `fixed top-4 right-4 px-4 py-2 rounded-md text-white z-50 ${
-        type === 'success' ? 'bg-green-500' : 
-        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-      }`;
-      messageDiv.textContent = message;
-      
-      document.body.appendChild(messageDiv);
-      
-      setTimeout(() => {
-        messageDiv.remove();
-      }, 3000);
-    }
-
-    // 管理模式
-    let isManageMode = false;
-
-    function toggleManageMode() {
-      isManageMode = !isManageMode;
-      const manageBtn = document.getElementById('manageBtn');
-      
-      if (isManageMode) {
-        manageBtn.textContent = '退出管理';
-        manageBtn.className = 'mt-2 px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-500 transition-colors w-full';
-        showMessage('现在可以删除用户上传的照片', 'info');
-      } else {
-        manageBtn.textContent = '管理照片';
-        manageBtn.className = 'mt-2 px-4 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-500 transition-colors w-full';
-      }
-      
-      // 更新照片显示
-      updatePhotoManageDisplay();
-    }
-
-    function updatePhotoManageDisplay() {
-      const deleteButtons = document.querySelectorAll('.photo-item button');
-      deleteButtons.forEach(btn => {
-        if (isManageMode) {
-          btn.classList.remove('opacity-0');
-          btn.classList.add('opacity-100');
-        } else {
-          btn.classList.remove('opacity-100');
-          btn.classList.add('opacity-0');
-        }
-      });
-    }
-
     // 页面加载时初始化
     document.addEventListener('DOMContentLoaded', function() {
       initPhotos();
-      initUploadArea();
     });
   </script>
 </body>
